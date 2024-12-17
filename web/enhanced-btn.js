@@ -4,33 +4,17 @@ import '../../scripts/api.js'
 const htmlStyleElement = document.createElement("style");
 htmlStyleElement.innerHTML = `
 
-#check-btn {
-    color: var(--input-text);
-    background-color: var(--comfy-input-bg);
-    border-radius: 8px;
-    border-color: var(--border-color);
-    border-style: solid;
-    margin-top: 2px;
-    width: 100%;
-    font-size: 20px;
-}
-
-#export-btn {
-    color: var(--input-text);
-    background-color: var(--comfy-input-bg);
-    border-radius: 8px;
-    border-color: var(--border-color);
-    border-style: solid;
-    margin-top: 2px;
-    width: 100%;
-    font-size: 20px;
-}
 `
 
 document.head.appendChild(htmlStyleElement);
 
+const htmlDivElement = document.createElement("div");
+htmlDivElement.className = "comfyui-button-group"
+
+document.querySelector("body > div.comfyui-body-top > div > div.comfyui-menu-right > div").appendChild(htmlDivElement);
+
 const enhancedBtn = document.createElement("button");
-enhancedBtn.id = "check-btn";
+enhancedBtn.className = "comfyui-button";
 enhancedBtn.innerHTML = "检查变量名";
 enhancedBtn.onclick = async () => {
   if (await checkVarName()) {
@@ -38,11 +22,11 @@ enhancedBtn.onclick = async () => {
   }
 }
 
-document.querySelector("body > div.comfy-menu").appendChild(enhancedBtn);
+htmlDivElement.appendChild(enhancedBtn);
 
 
 const exportBtn = document.createElement("button");
-exportBtn.id = "export-btn";
+exportBtn.className = "comfyui-button";
 exportBtn.innerHTML = "导出CM配置";
 exportBtn.onclick = async () => {
   if (!await checkVarName()) {
@@ -51,7 +35,7 @@ exportBtn.onclick = async () => {
   await exportPrompt()
 }
 
-document.querySelector("body > div.comfy-menu").appendChild(exportBtn);
+htmlDivElement.appendChild(exportBtn);
 
 async function checkVarName() {
   const p = await app.graphToPrompt()
