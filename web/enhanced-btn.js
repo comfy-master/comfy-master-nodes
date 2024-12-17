@@ -81,6 +81,14 @@ async function checkVarName() {
     }
     setName.add(node.widgets_values[0])
   }
+  if (!findConfig) {
+    alert("没有找到ServiceConfigNode")
+    return false
+  }
+  if (!findOutput) {
+    alert("没有找到CMaster_Output节点")
+    return false
+  }
   return true
 }
 
