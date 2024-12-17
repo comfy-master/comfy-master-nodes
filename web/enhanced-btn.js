@@ -52,10 +52,10 @@ async function checkVarName() {
         findConfig = true
       }
     }
-    if (!name.startsWith("CM_")) {
+    if (!name.startsWith("CMaster_")) {
       continue;
     }
-    if (name.startsWith("CM_Output")) {
+    if (name.startsWith("CMaster_Output")) {
       findOutput = true
     }
 
@@ -106,8 +106,8 @@ async function exportPrompt() {
     name: serviceName,
     description: serviceDescription,
     workflow: JSON.stringify(workflow),
-    params: Object.values(workflow).filter(e => e["class_type"].startsWith("CM_Input")).map(e => parseInput(e)),
-    outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CM_Output")).map(e => parseInput(e))
+    params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
+    outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseInput(e))
   }
   exportJson(serviceCode, JSON.stringify(saveObj, null, 2))
 }
@@ -137,14 +137,14 @@ function parseInput(node) {
     isExport: isExport,
   };
 
-  if (type === "CM_InputImage") {
+  if (type === "CMaster_InputImage") {
     ret = {
       key: newVarName,
       name: description,
       type: ParameterType.Image,
       isExport: isExport,
     }
-  } else if (type === "CM_InputString") {
+  } else if (type === "CMaster_InputString") {
     const text = node.inputs["text"]
 
     ret = {
@@ -154,7 +154,7 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
     }
-  } else if (type === "CM_InputEnumString") {
+  } else if (type === "CMaster_InputEnumString") {
     const text = node.inputs["text"]
     const enums = node.inputs["enums"]
 
@@ -166,7 +166,7 @@ function parseInput(node) {
       stringDefaultValue: text,
       enumStringValue: enums,
     }
-  } else if (type === "CM_InputBoolean") {
+  } else if (type === "CMaster_InputBoolean") {
     const num = node.inputs["value"]
 
     ret = {
@@ -176,7 +176,7 @@ function parseInput(node) {
       isExport: isExport,
       boolDefaultValue: num,
     }
-  } else if (type === "CM_InputInt") {
+  } else if (type === "CMaster_InputInt") {
     const num = node.inputs["number"]
 
     ret = {
@@ -186,7 +186,7 @@ function parseInput(node) {
       isExport: isExport,
       numberDefaultValue: num,
     }
-  } else if (type === "CM_InputRangeInt") {
+  } else if (type === "CMaster_InputRangeInt") {
     const num = node.inputs["number"]
     const min = node.inputs["min"]
     const max = node.inputs["max"]
@@ -200,7 +200,7 @@ function parseInput(node) {
       minNumberValue: min,
       maxNumberValue: max,
     }
-  } else if (type === "CM_InputFloat") {
+  } else if (type === "CMaster_InputFloat") {
     const num = node.inputs["number"]
 
     ret = {
@@ -210,7 +210,7 @@ function parseInput(node) {
       isExport: isExport,
       floatDefaultValue: num,
     }
-  } else if (type === "CM_InputRangeFloat") {
+  } else if (type === "CMaster_InputRangeFloat") {
     const num = node.inputs["number"]
     const min = node.inputs["min"]
     const max = node.inputs["max"]
@@ -224,7 +224,7 @@ function parseInput(node) {
       minFloatValue: min,
       maxFloatValue: max,
     }
-  } else if (type === "CM_InputCheckpoint") {
+  } else if (type === "CMaster_InputCheckpoint") {
     const text = node.inputs["ckpt_name"]
     const enums = node.inputs["checkpoints"]
 
@@ -262,7 +262,7 @@ function parseOutput(node) {
     isExport: isExport,
   }
 
-  if (type === "CM_OutputImage") {
+  if (type === "CMaster_OutputImage") {
     ret.type = OutputType.Image;
   }
   return  ret;
