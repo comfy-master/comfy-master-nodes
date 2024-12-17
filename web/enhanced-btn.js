@@ -115,7 +115,7 @@ async function exportPrompt() {
     description: serviceDescription,
     workflow: JSON.stringify(workflow),
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
-    outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseInput(e))
+    outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))
   }
   exportJson(serviceCode, JSON.stringify(saveObj, null, 2))
 }
