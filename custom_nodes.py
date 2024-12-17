@@ -8,8 +8,63 @@ import numpy as np
 from .encoding import encode_string, encode_image, encode_audio
 import os
 import torchaudio
+from datetime import datetime
 
 var_prefix_name = "ComfyMasterVar_"
+
+class ServiceConfigNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "name": ("STRING", {"multiline": False, "default": "服务名称"})
+            },
+            "optional": {
+                "description": ("STRING", {"multiline": True, "default": ""}),
+            }
+        }
+
+
+    RETURN_TYPES = ()
+    CATEGORY = "comfyui-master"
+    FUNCTION = "output_func"
+
+    def output_func(self, name, description):
+        return ()
+
+
+class InputCheckpointNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "var_name": ("STRING", {"multiline": False, "default": "InputCheckpoint"}),
+                "ckpt_name": (folder_paths.get_filename_list("checkpoints"), {"tooltip": "要加载的检查点（模型）的名称。"}),
+                "export": ("BOOLEAN", {"default": True}),
+                "checkpoints": ("STRING", {"multiline": True, "default": '\n'.join(folder_paths.get_filename_list("checkpoints"))}),
+            },
+            "optional": {
+                "description": ("STRING", {"multiline": False, "default": ""})
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "CLIP", "VAE")
+
+    CATEGORY = "comfyui-master"
+    FUNCTION = "input_checkpoint"
+
+    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description):
+        # Split enums by comma or newline, and strip whitespace
+        checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
+        if ckpt_name not in checkpoints:
+            checkpoints.append(text)
+
+        ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
+        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True,
+                                                    embedding_directory=folder_paths.get_folder_paths("embeddings"))
+        return out[:3]
+
+
 
 class InputImageNode:
     @classmethod
@@ -45,7 +100,7 @@ class InputImageNode:
         img = torch.from_numpy(img)[None,]
 
         return (img, mask)
-    
+
 
 class InputStringNode:
     @classmethod
@@ -76,16 +131,16 @@ class InputEnumStringNode:
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputEnum"}),
                 "text": ("STRING", {"multiline": False, "default": ""}),
-                "enums": ("STRING", {"multiline": True, "default": ""}),
                 "export": ("BOOLEAN", {"default": True}),
+                "enums": ("STRING", {"multiline": True, "default": ""}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
             }
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "BOOLEAN")
-    RETURN_NAMES = ("text", "enums", "export")
+    RETURN_TYPES = ("STRING", "BOOLEAN")
+    RETURN_NAMES = ("text", "export")
     CATEGORY = "comfyui-master"
     FUNCTION = "input_enum_string"
 
@@ -94,7 +149,7 @@ class InputEnumStringNode:
         enums = [enum.strip() for enum in enums.replace('\n', ',').split(',') if enum.strip()]
         if text not in enums:
             enums.append(text)
-        return (text, enums, export)
+        return (text, export)
     
 
 class InputBooleanNode:
@@ -152,17 +207,17 @@ class InputRangeIntNode:
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputRangeInt"}),
                 "number": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
+                "export": ("BOOLEAN", {"default": True}),
                 "min": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
                 "max": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
-                "export": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
             }
         }
 
-    RETURN_TYPES = ("INT", "INT", "INT", "BOOLEAN")
-    RETURN_NAMES = ("number", "min", "max", "export")
+    RETURN_TYPES = ("INT", "BOOLEAN")
+    RETURN_NAMES = ("number", "export")
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_int"
 
@@ -173,7 +228,7 @@ class InputRangeIntNode:
             number = min
         if number > max:
             number = max
-        return (number, min, max, export)
+        return (number,export)
     
 
 class InputFloatNode:
@@ -195,7 +250,7 @@ class InputFloatNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_float"
 
-    def input_float(self, var_name, number,export, description):
+    def input_float(self, var_name, number, export, description):
         return (number, export)
     
 
@@ -206,17 +261,17 @@ class InputRangeFloatNode:
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputRangeFloat"}),
                 "number": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
+                "export": ("BOOLEAN", {"default": True}),
                 "min": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
                 "max": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
-                "export": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
             }
         }
 
-    RETURN_TYPES = ("FLOAT", "FLOAT", "FLOAT", "BOOLEAN")
-    RETURN_NAMES = ("number", "min", "max", "export")
+    RETURN_TYPES = ("FLOAT", "BOOLEAN")
+    RETURN_NAMES = ("number", "export")
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_float"
 
@@ -227,7 +282,7 @@ class InputRangeFloatNode:
             number = min
         if number > max:
             number = max
-        return (number, min, max, export)
+        return (number, export)
     
 
 class OutputStringNode:
@@ -253,8 +308,7 @@ class OutputStringNode:
         server = PromptServer.instance
         server.send_sync(100001, encode_string(var_prefix_name + var_name, text), server.client_id)
 
-        return { "ui": { "text": [{"var_name": var_prefix_name + var_name, "text": text}] } }
-
+        return {"ui": {"text": [{"var_name": var_prefix_name + var_name, "text": text}]}}
 
 
 class OutputImageNode:
@@ -286,8 +340,9 @@ class OutputImageNode:
         var_name = var_prefix_name + var_name
         filename_prefix = self.filename_prefix + var_name
         results = []
-        
-        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
+
+        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+            filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
         for i, tensor in enumerate(images):
             array = 255.0 * tensor.cpu().numpy()
             image = Image.fromarray(np.clip(array, 0, 255).astype(np.uint8))
@@ -304,7 +359,7 @@ class OutputImageNode:
             })
 
         return {"ui": {"images": results}}
-    
+
 
 class OutputAudioNode:
 
@@ -334,9 +389,9 @@ class OutputAudioNode:
     def send_audio(self, var_name, audio, export, description):
         var_name = var_prefix_name + var_name
         filename_prefix = self.filename_prefix + var_name
-        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(os.path.join("audio", filename_prefix), self.output_dir)
+        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+            os.path.join("audio", filename_prefix), self.output_dir)
         results = list()
-        
 
         for (batch_number, waveform) in enumerate(audio["waveform"].cpu()):
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
@@ -345,8 +400,9 @@ class OutputAudioNode:
             buff = BytesIO()
             torchaudio.save(buff, waveform, audio["sample_rate"], format="WAV")
             server = PromptServer.instance
-            server.send_sync(100003, encode_audio(var_prefix_name + var_name, waveform, audio["sample_rate"]), server.client_id)
-        
+            server.send_sync(100003, encode_audio(var_prefix_name + var_name, waveform, audio["sample_rate"]),
+                             server.client_id)
+
             with open(os.path.join(full_output_folder, file), 'wb') as f:
                 f.write(buff.getbuffer())
 
@@ -357,4 +413,4 @@ class OutputAudioNode:
             })
             counter += 1
 
-        return { "ui": { "audio": results } }
+        return {"ui": {"audio": results}}
