@@ -1,6 +1,10 @@
 import "../../scripts/app.js";
 import '../../scripts/api.js'
 
+const htmlScriptElement = document.createElement("script");
+htmlScriptElement.src = "https://unpkg.com/pinyin-pro"
+document.head.appendChild(htmlScriptElement);
+
 const htmlStyleElement = document.createElement("style");
 htmlStyleElement.innerHTML = `
 
@@ -82,11 +86,11 @@ async function checkVarName() {
     setName.add(node.widgets_values[0])
   }
   if (!findConfig) {
-    alert("没有找到ServiceConfigNode")
+    alert("没有找到: 服务配置节点")
     return false
   }
   if (!findOutput) {
-    alert("没有找到CMaster_Output节点")
+    alert("没有找到：输出节点")
     return false
   }
   return true
@@ -97,12 +101,16 @@ async function exportPrompt() {
   let nodeId = ""
   let serviceName = ""
   let serviceDescription = ""
+  let serviceAllowAutoGenerate = false
+  let serviceAllowLocalRepair = false
   let serviceCode = "Code_" + Date.now()
   for (const node of p.workflow.nodes) {
     const name = node.type
     if (name === "ServiceConfigNode") {
       serviceName = node.widgets_values[0]
       serviceDescription = node.widgets_values[1]
+      serviceAllowAutoGenerate = node.widgets_values[2]
+      serviceAllowLocalRepair = node.widgets_values[3]
       nodeId = node.id
       break
     }
@@ -113,11 +121,13 @@ async function exportPrompt() {
     code: serviceCode,
     name: serviceName,
     description: serviceDescription,
+    allowAutoGenerate: !!serviceAllowAutoGenerate,
+    allowLocalRepair: !!serviceAllowLocalRepair,
     workflow: JSON.stringify(workflow),
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
     outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))
   }
-  exportJson(serviceCode, JSON.stringify(saveObj, null, 2))
+  exportJson(serviceName, JSON.stringify(saveObj, null, 2))
 }
 
 const ParameterType = {
@@ -287,9 +297,18 @@ function getFilename(defaultName) {
   return defaultName
 }
 
-function exportJson(id, json) {
+function getNamePinyin(name) {
+  return  pinyinPro.pinyin(name || "export", { toneType: "none" })
+    .split(/\s+/g)
+    .filter(e => !!e)
+    .map(e => e[0].toUpperCase() + (e.length > 1 ? e.substring(1) : ""))
+    .join("")
+}
+
+function exportJson(name, json) {
   const blob = new Blob([json], { type: 'application/json' })
-  const file = getFilename(`export_${id}.json`)
+
+  const file = getFilename(`${getNamePinyin(name)}.json`)
   if (!file) return
   comfyAPI.utils.downloadBlob(file, blob)
 }

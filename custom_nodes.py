@@ -17,10 +17,12 @@ class ServiceConfigNode:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "name": ("STRING", {"multiline": False, "default": "服务名称"})
+                "name": ("STRING", {"multiline": False, "default": "服务名称"}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": True, "default": ""}),
+                "allowAutoGenerate": ("BOOLEAN", {"default": False}),
+                "allowLocalRepair": ("BOOLEAN", {"default": False}),
             }
         }
 
