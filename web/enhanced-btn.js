@@ -254,6 +254,18 @@ function parseInput(node) {
       stringDefaultValue: text,
       enumStringValue: enums,
     }
+  } else if (type === "CMaster_InputLoraNode") {
+    const text = node.inputs["lora_name"]
+    const enums = node.inputs["loras"]
+
+    ret = {
+      key: newVarName,
+      name: description,
+      type: ParameterType.Enum_String,
+      isExport: isExport,
+      stringDefaultValue: text,
+      enumStringValue: enums,
+    }
   }
 
   return ret;

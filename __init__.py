@@ -16,6 +16,7 @@ NODE_CLASS_MAPPINGS = {
     "CMaster_InputFloat": custom_nodes.InputFloatNode,
     "CMaster_InputRangeFloat": custom_nodes.InputRangeFloatNode,
     "CMaster_InputCheckpoint": custom_nodes.InputCheckpointNode,
+    "CMaster_InputLoraNode": custom_nodes.InputLoraNode,
     "CMaster_OutputImage": custom_nodes.OutputImageNode,
 
     # "CMaster_OutputString": custom_nodes.OutputStringNode,
@@ -25,6 +26,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ServiceConfigNode": "服务配置节点",
     "CMaster_InputCheckpoint": "模型输入",
+    "CMaster_InputLoraNode": "Lora模型输入",
     "CMaster_InputImage": "图片输入",
     "CMaster_InputString": "字符串输入",
     "CMaster_InputEnumString": "枚举输入",

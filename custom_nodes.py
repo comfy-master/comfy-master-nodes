@@ -67,6 +67,56 @@ class InputCheckpointNode:
         return out[:3]
 
 
+class InputLoraNode:
+    def __init__(self):
+        self.loaded_lora = None
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "var_name": ("STRING", {"multiline": False, "default": "InputLora"}),
+                "model": ("MODEL", {"tooltip": "The diffusion model the LoRA will be applied to."}),
+                "clip": ("CLIP", {"tooltip": "The CLIP model the LoRA will be applied to."}),
+                "lora_name": (folder_paths.get_filename_list("loras"), {"tooltip": "加载LoRA."}),
+                "strength_model": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01,
+                                             "tooltip": "如何强烈地修改扩散模型。该值可以是负的。"}),
+                "strength_clip": ("FLOAT", {"default": 1.0, "min": -100.0, "max": 100.0, "step": 0.01,
+                                            "tooltip": "CLIP模型修改力度有多大。该值可以是负的。"}),
+                "export": ("BOOLEAN", {"default": True}),
+                "loras": ("STRING", {"multiline": True, "default": '\n'.join(folder_paths.get_filename_list("loras"))}),
+            },
+            "optional": {
+                "description": ("STRING", {"multiline": False, "default": ""})
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "CLIP")
+    OUTPUT_TOOLTIPS = ("The modified diffusion model.", "The modified CLIP model.")
+    FUNCTION = "load_lora"
+
+    CATEGORY = "comfyui-master"
+    DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
+
+    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description):
+        if strength_model == 0 and strength_clip == 0:
+            return (model, clip)
+
+        lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
+        lora = None
+        if self.loaded_lora is not None:
+            if self.loaded_lora[0] == lora_path:
+                lora = self.loaded_lora[1]
+            else:
+                self.loaded_lora = None
+
+        if lora is None:
+            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+            self.loaded_lora = (lora_path, lora)
+
+        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+        return (model_lora, clip_lora)
+
 
 class InputImageNode:
     @classmethod
