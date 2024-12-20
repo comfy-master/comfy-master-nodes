@@ -295,7 +295,7 @@ function parseOutput(node) {
   const type = node["class_type"]
   const varName = node.inputs["var_name"]
   const newVarName = `ComfyMasterVar_${varName}`;
-  const description = node.inputs["description"]
+  const description = node.inputs["description"] || varName
   const isExport = node.inputs["export"]
   const order = node.inputs["order"]
   let ret = {

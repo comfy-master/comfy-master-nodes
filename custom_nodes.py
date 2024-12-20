@@ -25,7 +25,6 @@ class ServiceConfigNode:
                 "description": ("STRING", {"multiline": True, "default": ""}),
                 "allowAutoGenerate": ("BOOLEAN", {"default": False}),
                 "allowLocalRepair": ("BOOLEAN", {"default": False}),
-                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
