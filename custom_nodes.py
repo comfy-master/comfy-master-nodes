@@ -23,6 +23,7 @@ class ServiceConfigNode:
                 "description": ("STRING", {"multiline": True, "default": ""}),
                 "allowAutoGenerate": ("BOOLEAN", {"default": False}),
                 "allowLocalRepair": ("BOOLEAN", {"default": False}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -46,7 +47,8 @@ class InputCheckpointNode:
                 "checkpoints": ("STRING", {"multiline": True, "default": '\n'.join(folder_paths.get_filename_list("checkpoints"))}),
             },
             "optional": {
-                "description": ("STRING", {"multiline": False, "default": ""})
+                "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -55,7 +57,7 @@ class InputCheckpointNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_checkpoint"
 
-    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description):
+    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description, order):
         # Split enums by comma or newline, and strip whitespace
         checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
         if ckpt_name not in checkpoints:
@@ -87,7 +89,8 @@ class InputLoraNode:
                 "loras": ("STRING", {"multiline": True, "default": '\n'.join(folder_paths.get_filename_list("loras"))}),
             },
             "optional": {
-                "description": ("STRING", {"multiline": False, "default": ""})
+                "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -98,7 +101,7 @@ class InputLoraNode:
     CATEGORY = "comfyui-master"
     DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
 
-    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description):
+    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description, order):
         if strength_model == 0 and strength_clip == 0:
             return (model, clip)
 
@@ -129,6 +132,7 @@ class InputImageNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -137,7 +141,7 @@ class InputImageNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_image"
 
-    def input_image(self, var_name, image, export, description):
+    def input_image(self, var_name, image, export, description, order):
         imgdata = base64.b64decode(image)
         img = Image.open(BytesIO(imgdata))
 
@@ -165,6 +169,7 @@ class InputStringNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -173,7 +178,7 @@ class InputStringNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_string"
 
-    def input_string(self, var_name, text, export, description):
+    def input_string(self, var_name, text, export, description, order):
         return (text, export)
 
 class InputEnumStringNode:
@@ -188,6 +193,7 @@ class InputEnumStringNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -196,7 +202,7 @@ class InputEnumStringNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_enum_string"
 
-    def input_enum_string(self, var_name, text, enums, export, description):
+    def input_enum_string(self, var_name, text, enums, export, description, order):
         # Split enums by comma or newline, and strip whitespace
         enums = [enum.strip() for enum in enums.replace('\n', ',').split(',') if enum.strip()]
         if text not in enums:
@@ -216,6 +222,7 @@ class InputBooleanNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -224,7 +231,7 @@ class InputBooleanNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_boolean"
 
-    def input_boolean(self, var_name, value, export, description):
+    def input_boolean(self, var_name, value, export, description, order):
         return (value, export)
     
 
@@ -240,6 +247,7 @@ class InputIntNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -248,7 +256,7 @@ class InputIntNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_int"
 
-    def input_int(self, var_name, number, export, description):
+    def input_int(self, var_name, number, export, description, order):
         return (number, export)
     
 
@@ -265,6 +273,7 @@ class InputRangeIntNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -273,7 +282,7 @@ class InputRangeIntNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_int"
 
-    def input_range_int(self, var_name, number, min, max, export, description):
+    def input_range_int(self, var_name, number, min, max, export, description, order):
         if min > max:
             min, max = max, min
         if number < min:
@@ -294,6 +303,7 @@ class InputFloatNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -302,7 +312,7 @@ class InputFloatNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_float"
 
-    def input_float(self, var_name, number, export, description):
+    def input_float(self, var_name, number, export, description, order):
         return (number, export)
     
 
@@ -319,6 +329,7 @@ class InputRangeFloatNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -327,7 +338,7 @@ class InputRangeFloatNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_float"
 
-    def input_range_float(self, var_name, number, min, max, export, description):
+    def input_range_float(self, var_name, number, min, max, export, description, order):
         if min > max:
             min, max = max, min
         if number < min:
@@ -348,6 +359,7 @@ class OutputStringNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -356,7 +368,7 @@ class OutputStringNode:
     OUTPUT_NODE = True
     FUNCTION = "output_string"
 
-    def output_string(self, var_name, text, export, description):
+    def output_string(self, var_name, text, export, description, order):
         server = PromptServer.instance
         server.send_sync(100001, encode_string(var_prefix_name + var_name, text), server.client_id)
 
@@ -380,6 +392,7 @@ class OutputImageNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -388,7 +401,7 @@ class OutputImageNode:
     OUTPUT_NODE = True
     CATEGORY = "comfyui-master"
 
-    def send_images(self, var_name, images, export, description):
+    def send_images(self, var_name, images, export, description, order):
         var_name = var_prefix_name + var_name
         filename_prefix = self.filename_prefix + var_name
         results = []
@@ -430,6 +443,7 @@ class OutputAudioNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
+                "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             }
         }
 
@@ -438,7 +452,7 @@ class OutputAudioNode:
     OUTPUT_NODE = True
     CATEGORY = "comfyui-master"
 
-    def send_audio(self, var_name, audio, export, description):
+    def send_audio(self, var_name, audio, export, description, order):
         var_name = var_prefix_name + var_name
         filename_prefix = self.filename_prefix + var_name
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(

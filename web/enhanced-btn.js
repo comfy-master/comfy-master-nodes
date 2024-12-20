@@ -148,11 +148,13 @@ function parseInput(node) {
   const newVarName = `ComfyMasterVar_${varName}`;
   const description = node.inputs["description"] || varName
   const isExport = node.inputs["export"]
+  const order = node.inputs["order"]
   let ret= {
     key: newVarName,
     name: description,
     type: ParameterType.Image,
     isExport: isExport,
+    order: order || 0
   };
 
   if (type === "CMaster_InputImage") {
@@ -161,6 +163,7 @@ function parseInput(node) {
       name: description,
       type: ParameterType.Image,
       isExport: isExport,
+      order: order || 0
     }
   } else if (type === "CMaster_InputString") {
     const text = node.inputs["text"]
@@ -171,6 +174,7 @@ function parseInput(node) {
       type: ParameterType.String,
       isExport: isExport,
       stringDefaultValue: text,
+      order: order || 0
     }
   } else if (type === "CMaster_InputEnumString") {
     const text = node.inputs["text"]
@@ -183,6 +187,7 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
+      order: order || 0
     }
   } else if (type === "CMaster_InputBoolean") {
     const num = node.inputs["value"]
@@ -193,6 +198,7 @@ function parseInput(node) {
       type: ParameterType.Boolean,
       isExport: isExport,
       boolDefaultValue: num,
+      order: order || 0
     }
   } else if (type === "CMaster_InputInt") {
     const num = node.inputs["number"]
@@ -203,6 +209,7 @@ function parseInput(node) {
       type: ParameterType.Number,
       isExport: isExport,
       numberDefaultValue: num,
+      order: order || 0
     }
   } else if (type === "CMaster_InputRangeInt") {
     const num = node.inputs["number"]
@@ -217,6 +224,7 @@ function parseInput(node) {
       numberDefaultValue: num,
       minNumberValue: min,
       maxNumberValue: max,
+      order: order || 0
     }
   } else if (type === "CMaster_InputFloat") {
     const num = node.inputs["number"]
@@ -227,6 +235,7 @@ function parseInput(node) {
       type: ParameterType.Float,
       isExport: isExport,
       floatDefaultValue: num,
+      order: order || 0
     }
   } else if (type === "CMaster_InputRangeFloat") {
     const num = node.inputs["number"]
@@ -241,6 +250,7 @@ function parseInput(node) {
       floatDefaultValue: num,
       minFloatValue: min,
       maxFloatValue: max,
+      order: order || 0
     }
   } else if (type === "CMaster_InputCheckpoint") {
     const text = node.inputs["ckpt_name"]
@@ -253,6 +263,7 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
+      order: order || 0
     }
   } else if (type === "CMaster_InputLoraNode") {
     const text = node.inputs["lora_name"]
@@ -265,6 +276,7 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
+      order: order || 0
     }
   }
 
@@ -285,11 +297,13 @@ function parseOutput(node) {
   const newVarName = `ComfyMasterVar_${varName}`;
   const description = node.inputs["description"]
   const isExport = node.inputs["export"]
+  const order = node.inputs["order"]
   let ret = {
     key: newVarName,
     name: description,
     type: OutputType.None,
     isExport: isExport,
+    order: order || 0
   }
 
   if (type === "CMaster_OutputImage") {
