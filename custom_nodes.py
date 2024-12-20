@@ -9,6 +9,8 @@ from .encoding import encode_string, encode_image, encode_audio
 import os
 import torchaudio
 from datetime import datetime
+import comfy.sd
+import comfy.utils
 
 var_prefix_name = "ComfyMasterVar_"
 
