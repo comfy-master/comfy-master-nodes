@@ -1,6 +1,7 @@
+from PIL.ImageFile import ImageFile
 from server import PromptServer
 import folder_paths
-from PIL import Image
+from PIL import Image, ImageOps, ImageSequence
 import base64
 from io import BytesIO
 import torch
@@ -8,9 +9,10 @@ import numpy as np
 from .encoding import encode_string, encode_image, encode_audio
 import os
 import torchaudio
-from datetime import datetime
+
 import comfy.sd
 import comfy.utils
+import node_helpers
 
 var_prefix_name = "ComfyMasterVar_"
 
@@ -50,6 +52,7 @@ class InputCheckpointNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (["固定值", "随机值"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
@@ -58,11 +61,11 @@ class InputCheckpointNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "input_checkpoint"
 
-    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description, order):
+    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description, order, default_generate_algorithm):
         # Split enums by comma or newline, and strip whitespace
         checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
         if ckpt_name not in checkpoints:
-            checkpoints.append(text)
+            checkpoints.append(ckpt_name)
 
         ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
         out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True,
@@ -92,6 +95,7 @@ class InputLoraNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (["固定值", "随机值"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
@@ -102,7 +106,7 @@ class InputLoraNode:
     CATEGORY = "comfyui-master"
     DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
 
-    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description, order):
+    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description, order, default_generate_algorithm):
         if strength_model == 0 and strength_clip == 0:
             return (model, clip)
 
@@ -121,6 +125,30 @@ class InputLoraNode:
         model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
         return (model_lora, clip_lora)
 
+
+class LoadImageToBase64:
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {"required":
+                    {"image": (sorted(files), {"image_upload": True})},
+                }
+
+    CATEGORY = "comfyui-master"
+
+    RETURN_TYPES = ("STRING", )
+    FUNCTION = "load_image"
+
+    def load_image(self, image):
+        image_path = folder_paths.get_annotated_filepath(image)
+
+        img: ImageFile = node_helpers.pillow(Image.open, image_path)
+        image_data = BytesIO()
+        img.save(image_data, format="PNG")
+        image_data_bytes = image_data.getvalue()
+
+        return (base64.b64encode(image_data_bytes).decode('utf-8'), )
 
 class InputImageNode:
     @classmethod
@@ -174,13 +202,13 @@ class InputStringNode:
             }
         }
 
-    RETURN_TYPES = ("STRING", "BOOLEAN")
-    RETURN_NAMES = ("text", "export")
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("text", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_string"
 
     def input_string(self, var_name, text, export, description, order):
-        return (text, export)
+        return (text, )
 
 class InputEnumStringNode:
     @classmethod
@@ -195,20 +223,21 @@ class InputEnumStringNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (["固定值", "随机值"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("STRING", "BOOLEAN")
-    RETURN_NAMES = ("text", "export")
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("text", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_enum_string"
 
-    def input_enum_string(self, var_name, text, enums, export, description, order):
+    def input_enum_string(self, var_name, text, enums, export, description, order, default_generate_algorithm):
         # Split enums by comma or newline, and strip whitespace
         enums = [enum.strip() for enum in enums.replace('\n', ',').split(',') if enum.strip()]
         if text not in enums:
             enums.append(text)
-        return (text, export)
+        return (text, )
     
 
 class InputBooleanNode:
@@ -224,16 +253,17 @@ class InputBooleanNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (["固定值", "随机值"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("BOOLEAN", "BOOLEAN")
-    RETURN_NAMES = ("value", "export")
+    RETURN_TYPES = ("BOOLEAN", )
+    RETURN_NAMES = ("value", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_boolean"
 
-    def input_boolean(self, var_name, value, export, description, order):
-        return (value, export)
+    def input_boolean(self, var_name, value, export, description, order, default_generate_algorithm):
+        return (value, )
     
 
 class InputIntNode:
@@ -249,16 +279,17 @@ class InputIntNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (["固定值", "随机值", "递增", "递减"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("INT", "BOOLEAN")
-    RETURN_NAMES = ("number", "export")
+    RETURN_TYPES = ("INT", )
+    RETURN_NAMES = ("number", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_int"
 
-    def input_int(self, var_name, number, export, description, order):
-        return (number, export)
+    def input_int(self, var_name, number, export, description, order, default_generate_algorithm):
+        return (number, )
     
 
 class InputRangeIntNode:
@@ -275,22 +306,24 @@ class InputRangeIntNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (
+                ["固定值", "随机值", "递增", "递减"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("INT", "BOOLEAN")
-    RETURN_NAMES = ("number", "export")
+    RETURN_TYPES = ("INT", )
+    RETURN_NAMES = ("number", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_int"
 
-    def input_range_int(self, var_name, number, min, max, export, description, order):
+    def input_range_int(self, var_name, number, min, max, export, description, order, default_generate_algorithm):
         if min > max:
             min, max = max, min
         if number < min:
             number = min
         if number > max:
             number = max
-        return (number,export)
+        return (number,)
     
 
 class InputFloatNode:
@@ -305,16 +338,18 @@ class InputFloatNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (
+                ["固定值", "随机值", "递增", "递减"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("FLOAT", "BOOLEAN")
-    RETURN_NAMES = ("number", "export")
+    RETURN_TYPES = ("FLOAT", )
+    RETURN_NAMES = ("number", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_float"
 
-    def input_float(self, var_name, number, export, description, order):
-        return (number, export)
+    def input_float(self, var_name, number, export, description, order, default_generate_algorithm):
+        return (number, )
     
 
 class InputRangeFloatNode:
@@ -331,22 +366,24 @@ class InputRangeFloatNode:
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
                 "order": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "default_generate_algorithm": (
+                ["固定值", "随机值", "递增", "递减"], {"tooltip": "默认生成算法", "default": "固定值"})
             }
         }
 
-    RETURN_TYPES = ("FLOAT", "BOOLEAN")
-    RETURN_NAMES = ("number", "export")
+    RETURN_TYPES = ("FLOAT", )
+    RETURN_NAMES = ("number", )
     CATEGORY = "comfyui-master"
     FUNCTION = "input_range_float"
 
-    def input_range_float(self, var_name, number, min, max, export, description, order):
+    def input_range_float(self, var_name, number, min, max, export, description, order, default_generate_algorithm):
         if min > max:
             min, max = max, min
         if number < min:
             number = min
         if number > max:
             number = max
-        return (number, export)
+        return (number, )
     
 
 class OutputStringNode:

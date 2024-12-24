@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "depend
 WEB_DIRECTORY = "web"
 NODE_CLASS_MAPPINGS = {
     "ServiceConfigNode": custom_nodes.ServiceConfigNode,
+    "LoadImageToBase64": custom_nodes.LoadImageToBase64,
     "CMaster_InputImage": custom_nodes.InputImageNode,
     "CMaster_InputString": custom_nodes.InputStringNode,
     "CMaster_InputEnumString": custom_nodes.InputEnumStringNode,
@@ -25,6 +26,7 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ServiceConfigNode": "服务配置节点",
+    "LoadImageToBase64": "加载图片(测试)",
     "CMaster_InputCheckpoint": "模型输入",
     "CMaster_InputLoraNode": "Lora模型输入",
     "CMaster_InputImage": "图片输入",

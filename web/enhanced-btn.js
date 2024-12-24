@@ -75,7 +75,7 @@ async function checkVarName() {
       alert(`${name} 属性名称没有配置`)
       return false
     }
-    if ( typeof node.widgets_values[0] !== "string") {
+    if (typeof node.widgets_values[0] !== "string") {
       alert(`${name} 属性名称不是字符串`)
       return false
     }
@@ -117,6 +117,13 @@ async function exportPrompt() {
   }
   const workflow = {...p.output}
   delete workflow[nodeId]
+  for (let [key, value] of Object.entries(workflow)) {
+    if (value["class_type"] === "CMaster_InputImage") {
+      value["inputs"]["image"] = ""
+    } else if (value["class_type"] === "LoadImageToBase64") {
+      delete workflow[key]
+    }
+  }
   const saveObj = {
     code: serviceCode,
     name: serviceName,
@@ -142,6 +149,8 @@ const ParameterType = {
   Range_Float: 8,
 }
 
+const algorithms = ["", "固定值", "随机值", "递增", "递减"]
+
 function parseInput(node) {
   const type = node["class_type"]
   const varName = node.inputs["var_name"]
@@ -149,12 +158,14 @@ function parseInput(node) {
   const description = node.inputs["description"] || varName
   const isExport = node.inputs["export"]
   const order = node.inputs["order"]
-  let ret= {
+  const defaultGenerateAlgorithm = Math.max(0, algorithms.indexOf(node.inputs["default_generate_algorithm"]))
+  let ret = {
     key: newVarName,
     name: description,
     type: ParameterType.Image,
     isExport: isExport,
-    order: order || 0
+    order: order || 0,
+    defaultGenerateAlgorithm
   };
 
   if (type === "CMaster_InputImage") {
@@ -163,7 +174,8 @@ function parseInput(node) {
       name: description,
       type: ParameterType.Image,
       isExport: isExport,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputString") {
     const text = node.inputs["text"]
@@ -174,7 +186,8 @@ function parseInput(node) {
       type: ParameterType.String,
       isExport: isExport,
       stringDefaultValue: text,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputEnumString") {
     const text = node.inputs["text"]
@@ -187,7 +200,8 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputBoolean") {
     const num = node.inputs["value"]
@@ -198,7 +212,8 @@ function parseInput(node) {
       type: ParameterType.Boolean,
       isExport: isExport,
       boolDefaultValue: num,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputInt") {
     const num = node.inputs["number"]
@@ -209,7 +224,8 @@ function parseInput(node) {
       type: ParameterType.Number,
       isExport: isExport,
       numberDefaultValue: num,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputRangeInt") {
     const num = node.inputs["number"]
@@ -224,7 +240,8 @@ function parseInput(node) {
       numberDefaultValue: num,
       minNumberValue: min,
       maxNumberValue: max,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputFloat") {
     const num = node.inputs["number"]
@@ -235,7 +252,8 @@ function parseInput(node) {
       type: ParameterType.Float,
       isExport: isExport,
       floatDefaultValue: num,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputRangeFloat") {
     const num = node.inputs["number"]
@@ -250,7 +268,8 @@ function parseInput(node) {
       floatDefaultValue: num,
       minFloatValue: min,
       maxFloatValue: max,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputCheckpoint") {
     const text = node.inputs["ckpt_name"]
@@ -263,7 +282,8 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   } else if (type === "CMaster_InputLoraNode") {
     const text = node.inputs["lora_name"]
@@ -276,7 +296,8 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
-      order: order || 0
+      order: order || 0,
+      defaultGenerateAlgorithm
     }
   }
 
@@ -309,7 +330,7 @@ function parseOutput(node) {
   if (type === "CMaster_OutputImage") {
     ret.type = OutputType.Image;
   }
-  return  ret;
+  return ret;
 }
 
 function getFilename(defaultName) {
@@ -324,7 +345,7 @@ function getFilename(defaultName) {
 }
 
 function getNamePinyin(name) {
-  return  pinyinPro.pinyin(name || "export", { toneType: "none" })
+  return pinyinPro.pinyin(name || "export", {toneType: "none"})
     .split(/\s+/g)
     .filter(e => !!e)
     .map(e => e[0].toUpperCase() + (e.length > 1 ? e.substring(1) : ""))
@@ -332,7 +353,7 @@ function getNamePinyin(name) {
 }
 
 function exportJson(name, json) {
-  const blob = new Blob([json], { type: 'application/json' })
+  const blob = new Blob([json], {type: 'application/json'})
 
   const file = getFilename(`${getNamePinyin(name)}.json`)
   if (!file) return
