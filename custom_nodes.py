@@ -62,15 +62,19 @@ class InputCheckpointNode:
     FUNCTION = "input_checkpoint"
 
     def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description, order, default_generate_algorithm):
-        # Split enums by comma or newline, and strip whitespace
-        checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
-        if ckpt_name not in checkpoints:
-            checkpoints.append(ckpt_name)
+        try:
+            # Split enums by comma or newline, and strip whitespace
+            checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
+            if ckpt_name not in checkpoints:
+                checkpoints.append(ckpt_name)
 
-        ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
-        out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True,
-                                                    embedding_directory=folder_paths.get_folder_paths("embeddings"))
-        return out[:3]
+            ckpt_path = folder_paths.get_full_path_or_raise("checkpoints", ckpt_name)
+            out = comfy.sd.load_checkpoint_guess_config(ckpt_path, output_vae=True, output_clip=True,
+                                                        embedding_directory=folder_paths.get_folder_paths("embeddings"))
+            return out[:3]
+        except Exception as e:
+            print(f"raised exception: {var_name}")
+            raise e
 
 
 class InputLoraNode:
@@ -107,23 +111,27 @@ class InputLoraNode:
     DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
 
     def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description, order, default_generate_algorithm):
-        if strength_model == 0 and strength_clip == 0:
-            return (model, clip)
+        try:
+            if strength_model == 0 and strength_clip == 0:
+                return (model, clip)
 
-        lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
-        lora = None
-        if self.loaded_lora is not None:
-            if self.loaded_lora[0] == lora_path:
-                lora = self.loaded_lora[1]
-            else:
-                self.loaded_lora = None
+            lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
+            lora = None
+            if self.loaded_lora is not None:
+                if self.loaded_lora[0] == lora_path:
+                    lora = self.loaded_lora[1]
+                else:
+                    self.loaded_lora = None
 
-        if lora is None:
-            lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
-            self.loaded_lora = (lora_path, lora)
+            if lora is None:
+                lora = comfy.utils.load_torch_file(lora_path, safe_load=True)
+                self.loaded_lora = (lora_path, lora)
 
-        model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
-        return (model_lora, clip_lora)
+            model_lora, clip_lora = comfy.sd.load_lora_for_models(model, clip, lora, strength_model, strength_clip)
+            return (model_lora, clip_lora)
+        except Exception as e:
+            print(f"raised exception: {var_name}")
+            raise e
 
 
 class LoadImageToBase64:
@@ -141,14 +149,18 @@ class LoadImageToBase64:
     FUNCTION = "load_image"
 
     def load_image(self, image):
-        image_path = folder_paths.get_annotated_filepath(image)
+        try:
+            image_path = folder_paths.get_annotated_filepath(image)
 
-        img: ImageFile = node_helpers.pillow(Image.open, image_path)
-        image_data = BytesIO()
-        img.save(image_data, format="PNG")
-        image_data_bytes = image_data.getvalue()
+            img: ImageFile = node_helpers.pillow(Image.open, image_path)
+            image_data = BytesIO()
+            img.save(image_data, format="PNG")
+            image_data_bytes = image_data.getvalue()
 
-        return (base64.b64encode(image_data_bytes).decode('utf-8'), )
+            return (base64.b64encode(image_data_bytes).decode('utf-8'),)
+        except Exception as e:
+            print(f"raised exception: LoadImageToBase64")
+            raise e
 
 class InputImageNode:
     @classmethod
@@ -171,20 +183,24 @@ class InputImageNode:
     FUNCTION = "input_image"
 
     def input_image(self, var_name, image, export, description, order):
-        imgdata = base64.b64decode(image)
-        img = Image.open(BytesIO(imgdata))
+        try:
+            imgdata = base64.b64decode(image)
+            img = Image.open(BytesIO(imgdata))
 
-        if "A" in img.getbands():
-            mask = np.array(img.getchannel("A")).astype(np.float32) / 255.0
-            mask = 1.0 - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            if "A" in img.getbands():
+                mask = np.array(img.getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
+            else:
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
 
-        img = img.convert("RGB")
-        img = np.array(img).astype(np.float32) / 255.0
-        img = torch.from_numpy(img)[None,]
+            img = img.convert("RGB")
+            img = np.array(img).astype(np.float32) / 255.0
+            img = torch.from_numpy(img)[None,]
 
-        return (img, mask)
+            return (img, mask)
+        except Exception as e:
+            print(f"Exception raised: {var_name}")
+            raise e
 
 
 class InputStringNode:
@@ -440,28 +456,32 @@ class OutputImageNode:
     CATEGORY = "comfyui-master"
 
     def send_images(self, var_name, images, export, description, order):
-        var_name = var_prefix_name + var_name
-        filename_prefix = self.filename_prefix + var_name
-        results = []
+        try:
+            var_name = var_prefix_name + var_name
+            filename_prefix = self.filename_prefix + var_name
+            results = []
 
-        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
-            filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
-        for i, tensor in enumerate(images):
-            array = 255.0 * tensor.cpu().numpy()
-            image = Image.fromarray(np.clip(array, 0, 255).astype(np.uint8))
+            full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+                filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
+            for i, tensor in enumerate(images):
+                array = 255.0 * tensor.cpu().numpy()
+                image = Image.fromarray(np.clip(array, 0, 255).astype(np.uint8))
 
-            server = PromptServer.instance
-            server.send_sync(100002, encode_image(var_prefix_name + var_name, image), server.client_id)
-            filename_with_batch_num = filename.replace("%batch_num%", str(i))
-            file = f"{filename_with_batch_num}_{counter:05}_.png"
-            image.save(os.path.join(full_output_folder, file), pnginfo=None, compress_level=1)
-            results.append({
-                "filename": file,
-                "subfolder": subfolder,
-                "type": self.type
-            })
+                server = PromptServer.instance
+                server.send_sync(100002, encode_image(var_prefix_name + var_name, image), server.client_id)
+                filename_with_batch_num = filename.replace("%batch_num%", str(i))
+                file = f"{filename_with_batch_num}_{counter:05}_.png"
+                image.save(os.path.join(full_output_folder, file), pnginfo=None, compress_level=1)
+                results.append({
+                    "filename": file,
+                    "subfolder": subfolder,
+                    "type": self.type
+                })
 
-        return {"ui": {"images": results}}
+            return {"ui": {"images": results}}
+        except Exception as e:
+            print(f"Exception: {var_name}")
+            raise e
 
 
 class OutputAudioNode:
