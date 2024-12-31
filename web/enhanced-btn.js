@@ -19,11 +19,14 @@ document.querySelector("body > div.comfyui-body-top > div > div.comfyui-menu-rig
 
 const enhancedBtn = document.createElement("button");
 enhancedBtn.className = "comfyui-button";
-enhancedBtn.innerHTML = "检查变量名";
+enhancedBtn.innerHTML = "复制导出配置";
 enhancedBtn.onclick = async () => {
-  if (await checkVarName()) {
-    alert("检查通过")
+    if (!await checkVarName()) {
+    return false
   }
+  const resp = await exportPrompt()
+  await navigator.clipboard.writeText(resp.data)
+  alert("配置复制到剪切板成功")
 }
 
 htmlDivElement.appendChild(enhancedBtn);
@@ -36,7 +39,8 @@ exportBtn.onclick = async () => {
   if (!await checkVarName()) {
     return false
   }
-  await exportPrompt()
+  const resp = await exportPrompt()
+  exportJson(resp.serviceName, resp.data)
 }
 
 htmlDivElement.appendChild(exportBtn);
@@ -101,16 +105,18 @@ async function exportPrompt() {
   let nodeId = ""
   let serviceName = ""
   let serviceDescription = ""
-  let serviceAllowAutoGenerate = false
   let serviceAllowLocalRepair = false
+  let serviceAllowPreload = false
+  let serviceAllowSingleDeploy = false
   let serviceCode = "Code_" + Date.now()
   for (const node of p.workflow.nodes) {
     const name = node.type
     if (name === "ServiceConfigNode") {
       serviceName = node.widgets_values[0]
       serviceDescription = node.widgets_values[1]
-      serviceAllowAutoGenerate = node.widgets_values[2]
-      serviceAllowLocalRepair = node.widgets_values[3]
+      serviceAllowLocalRepair = node.widgets_values[2]
+      serviceAllowPreload = node.widgets_values[3]
+      serviceAllowSingleDeploy = node.widgets_values[4]
       nodeId = node.id
       break
     }
@@ -125,16 +131,21 @@ async function exportPrompt() {
     }
   }
   const saveObj = {
+    version: 2,
     code: serviceCode,
     name: serviceName,
     description: serviceDescription,
-    allowAutoGenerate: !!serviceAllowAutoGenerate,
     allowLocalRepair: !!serviceAllowLocalRepair,
-    workflow: JSON.stringify(workflow),
+    allowPreload: !!serviceAllowPreload,
+    allowSingleDeploy: !! serviceAllowSingleDeploy,
+    workflow: workflow,
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
     outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))
   }
-  exportJson(serviceName, JSON.stringify(saveObj, null, 2))
+  return {
+    serviceName,
+    data: JSON.stringify(saveObj, null, 2)
+  }
 }
 
 const ParameterType = {

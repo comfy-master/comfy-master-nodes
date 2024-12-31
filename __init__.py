@@ -20,6 +20,7 @@ NODE_CLASS_MAPPINGS = {
     "CMaster_InputLoraNode": custom_nodes.InputLoraNode,
     "CMaster_OutputImage": custom_nodes.OutputImageNode,
 
+
     # "CMaster_OutputString": custom_nodes.OutputStringNode,
     # "CMaster_OutputAudio": custom_nodes.OutputAudioNode,
 }

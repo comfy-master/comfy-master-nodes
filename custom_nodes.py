@@ -1,3 +1,5 @@
+import sys
+
 from PIL.ImageFile import ImageFile
 from server import PromptServer
 import folder_paths
@@ -25,8 +27,9 @@ class ServiceConfigNode:
             },
             "optional": {
                 "description": ("STRING", {"multiline": True, "default": ""}),
-                "allowAutoGenerate": ("BOOLEAN", {"default": False}),
                 "allowLocalRepair": ("BOOLEAN", {"default": False}),
+                "allowPreload": ("BOOLEAN", {"default": False}),
+                "allowSingleDeploy": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -35,7 +38,7 @@ class ServiceConfigNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "output_func"
 
-    def output_func(self, name, description):
+    def output_func(self, name, description = "", allowLocalRepair = False, allowPreload = False, allowSingleDeploy = False):
         return ()
 
 
@@ -58,10 +61,10 @@ class InputCheckpointNode:
 
     RETURN_TYPES = ("MODEL", "CLIP", "VAE")
 
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_checkpoint"
 
-    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description, order, default_generate_algorithm):
+    def input_checkpoint(self, var_name, ckpt_name, checkpoints, export, description = "", order = 0, default_generate_algorithm= "固定值"):
         try:
             # Split enums by comma or newline, and strip whitespace
             checkpoints = [enum.strip() for enum in checkpoints.replace('\n', ',').split(',') if enum.strip()]
@@ -107,10 +110,11 @@ class InputLoraNode:
     OUTPUT_TOOLTIPS = ("The modified diffusion model.", "The modified CLIP model.")
     FUNCTION = "load_lora"
 
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     DESCRIPTION = "LoRAs are used to modify diffusion and CLIP models, altering the way in which latents are denoised such as applying styles. Multiple LoRA nodes can be linked together."
 
-    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description, order, default_generate_algorithm):
+    def load_lora(self, var_name, model, clip, lora_name, strength_model, strength_clip, export, loras, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         try:
             if strength_model == 0 and strength_clip == 0:
                 return (model, clip)
@@ -143,7 +147,7 @@ class LoadImageToBase64:
                     {"image": (sorted(files), {"image_upload": True})},
                 }
 
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/调试"
 
     RETURN_TYPES = ("STRING", )
     FUNCTION = "load_image"
@@ -179,10 +183,10 @@ class InputImageNode:
 
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("image", "mask")
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_image"
 
-    def input_image(self, var_name, image, export, description, order):
+    def input_image(self, var_name, image, export, description = "", order = 0):
         try:
             imgdata = base64.b64decode(image)
             img = Image.open(BytesIO(imgdata))
@@ -220,10 +224,10 @@ class InputStringNode:
 
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = ("text", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_string"
 
-    def input_string(self, var_name, text, export, description, order):
+    def input_string(self, var_name, text, export, description = "", order = 0):
         return (text, )
 
 class InputEnumStringNode:
@@ -245,10 +249,11 @@ class InputEnumStringNode:
 
     RETURN_TYPES = ("STRING", )
     RETURN_NAMES = ("text", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_enum_string"
 
-    def input_enum_string(self, var_name, text, enums, export, description, order, default_generate_algorithm):
+    def input_enum_string(self, var_name, text, enums, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         # Split enums by comma or newline, and strip whitespace
         enums = [enum.strip() for enum in enums.replace('\n', ',').split(',') if enum.strip()]
         if text not in enums:
@@ -275,10 +280,11 @@ class InputBooleanNode:
 
     RETURN_TYPES = ("BOOLEAN", )
     RETURN_NAMES = ("value", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_boolean"
 
-    def input_boolean(self, var_name, value, export, description, order, default_generate_algorithm):
+    def input_boolean(self, var_name, value, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         return (value, )
     
 
@@ -301,10 +307,11 @@ class InputIntNode:
 
     RETURN_TYPES = ("INT", )
     RETURN_NAMES = ("number", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_int"
 
-    def input_int(self, var_name, number, export, description, order, default_generate_algorithm):
+    def input_int(self, var_name, number, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         return (number, )
     
 
@@ -329,10 +336,11 @@ class InputRangeIntNode:
 
     RETURN_TYPES = ("INT", )
     RETURN_NAMES = ("number", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_range_int"
 
-    def input_range_int(self, var_name, number, min, max, export, description, order, default_generate_algorithm):
+    def input_range_int(self, var_name, number, min, max, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         if min > max:
             min, max = max, min
         if number < min:
@@ -361,10 +369,11 @@ class InputFloatNode:
 
     RETURN_TYPES = ("FLOAT", )
     RETURN_NAMES = ("number", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_float"
 
-    def input_float(self, var_name, number, export, description, order, default_generate_algorithm):
+    def input_float(self, var_name, number, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         return (number, )
     
 
@@ -389,10 +398,11 @@ class InputRangeFloatNode:
 
     RETURN_TYPES = ("FLOAT", )
     RETURN_NAMES = ("number", )
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输入"
     FUNCTION = "input_range_float"
 
-    def input_range_float(self, var_name, number, min, max, export, description, order, default_generate_algorithm):
+    def input_range_float(self, var_name, number, min, max, export, description = "", order = 0,
+                  default_generate_algorithm = "固定值"):
         if min > max:
             min, max = max, min
         if number < min:
@@ -418,11 +428,11 @@ class OutputStringNode:
         }
 
     RETURN_TYPES = ()
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输出"
     OUTPUT_NODE = True
     FUNCTION = "output_string"
 
-    def output_string(self, var_name, text, export, description, order):
+    def output_string(self, var_name, text, export, description = "", order = 0):
         server = PromptServer.instance
         server.send_sync(100001, encode_string(var_prefix_name + var_name, text), server.client_id)
 
@@ -453,9 +463,9 @@ class OutputImageNode:
     RETURN_TYPES = ()
     FUNCTION = "send_images"
     OUTPUT_NODE = True
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输出"
 
-    def send_images(self, var_name, images, export, description, order):
+    def send_images(self, var_name, images, export, description = "", order = 0):
         try:
             var_name = var_prefix_name + var_name
             filename_prefix = self.filename_prefix + var_name
@@ -508,9 +518,9 @@ class OutputAudioNode:
     RETURN_TYPES = ()
     FUNCTION = "send_audio"
     OUTPUT_NODE = True
-    CATEGORY = "comfyui-master"
+    CATEGORY = "comfyui-master/输出"
 
-    def send_audio(self, var_name, audio, export, description, order):
+    def send_audio(self, var_name, audio, export, description = "", order = 0):
         var_name = var_prefix_name + var_name
         filename_prefix = self.filename_prefix + var_name
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
