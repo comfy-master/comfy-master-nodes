@@ -108,6 +108,7 @@ async function exportPrompt() {
   let serviceAllowLocalRepair = false
   let serviceAllowPreload = false
   let serviceAllowSingleDeploy = false
+  let serviceAllowCPU = false
   let serviceCode = "Code_" + Date.now()
   for (const node of p.workflow.nodes) {
     const name = node.type
@@ -117,6 +118,7 @@ async function exportPrompt() {
       serviceAllowLocalRepair = node.widgets_values[2]
       serviceAllowPreload = node.widgets_values[3]
       serviceAllowSingleDeploy = node.widgets_values[4]
+      serviceAllowCPU = node.widgets_values[5]
       nodeId = node.id
       break
     }
@@ -138,6 +140,7 @@ async function exportPrompt() {
     allowLocalRepair: !!serviceAllowLocalRepair,
     allowPreload: !!serviceAllowPreload,
     allowSingleDeploy: !! serviceAllowSingleDeploy,
+    allowCPU: !!serviceAllowCPU,
     workflow: workflow,
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
     outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))
@@ -158,6 +161,7 @@ const ParameterType = {
   Enum_String: 6,
   Float: 7,
   Range_Float: 8,
+  Image_Mask: 9,
 }
 
 const algorithms = ["", "固定值", "随机值", "递增", "递减"]
@@ -307,6 +311,15 @@ function parseInput(node) {
       isExport: isExport,
       stringDefaultValue: text,
       enumStringValue: enums,
+      order: order || 0,
+      defaultGenerateAlgorithm
+    }
+  } else if (type === "CMaster_InputMaskImageNode") {
+    ret = {
+      key: newVarName,
+      name: description,
+      type: ParameterType.Image_Mask,
+      isExport: isExport,
       order: order || 0,
       defaultGenerateAlgorithm
     }
