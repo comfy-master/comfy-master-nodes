@@ -60,6 +60,17 @@ async function checkVarName() {
         findConfig = true
       }
     }
+
+    if (name === "CTool_ImageWorkflowMetadataTestNode") {
+      alert("存在节点 ‘图片元数据(测试)’")
+        return false
+    }
+
+      if (name === "CTool_ImageMaskTestNode") {
+      alert("存在节点 ‘遮罩数据(测试)’")
+        return false
+    }
+
     if (!name.startsWith("CMaster_")) {
       continue;
     }
@@ -109,6 +120,7 @@ async function exportPrompt() {
   let serviceAllowPreload = false
   let serviceAllowSingleDeploy = false
   let serviceAllowCPU = false
+  let gpuMemory = 8
   let serviceCode = "Code_" + Date.now()
   for (const node of p.workflow.nodes) {
     const name = node.type
@@ -119,6 +131,7 @@ async function exportPrompt() {
       serviceAllowPreload = node.widgets_values[3]
       serviceAllowSingleDeploy = node.widgets_values[4]
       serviceAllowCPU = node.widgets_values[5]
+      gpuMemory = node.widgets_values[6]
       nodeId = node.id
       break
     }
@@ -141,6 +154,7 @@ async function exportPrompt() {
     allowPreload: !!serviceAllowPreload,
     allowSingleDeploy: !! serviceAllowSingleDeploy,
     allowCPU: !!serviceAllowCPU,
+    gpuMemory,
     workflow: workflow,
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
     outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))

@@ -33,6 +33,7 @@ class ServiceConfigNode:
                 "allowPreload": ("BOOLEAN", {"default": False, "label_on": "预先加载"}),
                 "allowSingleDeploy": ("BOOLEAN", {"default": False, "label_on": "单独部署"}),
                 "cpu": ("BOOLEAN", {"default": False, "label_on": "CPU部署"}),
+                "gpu_memory": ("INT", {"default": 8}),
             }
         }
 
@@ -41,7 +42,7 @@ class ServiceConfigNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "output_func"
 
-    def output_func(self, name, description = "", allowLocalRepair = False, allowPreload = False, allowSingleDeploy = False, cpu=False):
+    def output_func(self, name, description = "", allowLocalRepair = False, allowPreload = False, allowSingleDeploy = False, cpu=False, gpu_memory=3):
         return ()
 
 class ImageWorkflowMetadataNode:
@@ -96,6 +97,86 @@ class ImageWorkflowMetadataTestNode:
                     selection_x=0, selection_y=0,
                     selection_width = 0, selection_height = 0):
         return (document_width, document_height, has_selection, selection_x, selection_y, selection_width, selection_height)
+
+class ImageMaskNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "hidden": {
+                "has_mask": ("BOOLEAN", {"default": False}),
+                "mask_image": ("STRING", {"multiline": False}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK", "BOOLEAN")
+    RETURN_NAMES = ("image", "mask", "是否存在遮罩")
+    CATEGORY = "comfyui-master/工具"
+    FUNCTION = "input_image"
+
+    def input_image(self, has_mask, mask_image):
+        if not has_mask:
+            return None, None, False
+        try:
+            imgdata = base64.b64decode(mask_image)
+            img = Image.open(BytesIO(imgdata))
+            img = np.array(img).astype(np.float32) / 255.0
+            img = torch.from_numpy(img)
+            if img.dim() == 3:  # RGB(A) input, use red channel
+                img = img[:, :, 0]
+            return self.read_image(mask_image), img.unsqueeze(0), has_mask
+        except Exception as e:
+            print(f"Exception raised: ImageMaskNode")
+            raise e
+
+    def read_image(self, image: str):
+        imgdata = base64.b64decode(image)
+        img = Image.open(BytesIO(imgdata))
+
+        img = img.convert("RGB")
+        img = np.array(img).astype(np.float32) / 255.0
+        img = torch.from_numpy(img)[None,]
+
+        return img
+
+class ImageMaskTestNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "has_mask": ("BOOLEAN", {"default": False}),
+                "mask_image": ("STRING", {"multiline": False}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK", "BOOLEAN")
+    RETURN_NAMES = ("image", "mask", "是否存在遮罩")
+    CATEGORY = "comfyui-master/调试"
+    FUNCTION = "input_image"
+
+    def input_image(self, has_mask, mask_image):
+        if not has_mask:
+            return None, None, False
+        try:
+            imgdata = base64.b64decode(mask_image)
+            img = Image.open(BytesIO(imgdata))
+            img = np.array(img).astype(np.float32) / 255.0
+            img = torch.from_numpy(img)
+            if img.dim() == 3:  # RGB(A) input, use red channel
+                img = img[:, :, 0]
+            return self.read_image(mask_image), img.unsqueeze(0), has_mask
+        except Exception as e:
+            print(f"Exception raised: ImageMaskTestNode")
+            raise e
+
+    def read_image(self, image: str):
+        imgdata = base64.b64decode(image)
+        img = Image.open(BytesIO(imgdata))
+
+        img = img.convert("RGB")
+        img = np.array(img).astype(np.float32) / 255.0
+        img = torch.from_numpy(img)[None,]
+
+        return img
 
 
 
