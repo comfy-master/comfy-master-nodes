@@ -139,7 +139,7 @@ async function exportPrompt() {
   const workflow = {...p.output}
   delete workflow[nodeId]
   for (let [key, value] of Object.entries(workflow)) {
-    if (value["class_type"] === "CMaster_InputImage") {
+    if (value["class_type"] === "CMaster_InputImage" || "CMaster_InputMaskImageNode") {
       value["inputs"]["image"] = ""
     } else if (value["class_type"] === "LoadImageToBase64") {
       delete workflow[key]
