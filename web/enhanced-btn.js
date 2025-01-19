@@ -118,10 +118,9 @@ async function exportPrompt() {
   let serviceDescription = ""
   let serviceAllowLocalRepair = false
   let serviceAllowPreload = false
-  let serviceAllowSingleDeploy = false
-  let serviceAllowCPU = false
-  let gpuMemory = 8
-  let serviceCode = "Code_" + Date.now()
+  let image = ""
+  let group = ""
+  let share = false
   for (const node of p.workflow.nodes) {
     const name = node.type
     if (name === "ServiceConfigNode") {
@@ -129,9 +128,9 @@ async function exportPrompt() {
       serviceDescription = node.widgets_values[1]
       serviceAllowLocalRepair = node.widgets_values[2]
       serviceAllowPreload = node.widgets_values[3]
-      serviceAllowSingleDeploy = node.widgets_values[4]
-      serviceAllowCPU = node.widgets_values[5]
-      gpuMemory = node.widgets_values[6]
+      image = node.widgets_values[4]
+      group = node.widgets_values[5]
+      share = node.widgets_values[6]
       nodeId = node.id
       break
     }
@@ -146,15 +145,13 @@ async function exportPrompt() {
     }
   }
   const saveObj = {
-    version: 2,
-    code: serviceCode,
     name: serviceName,
     description: serviceDescription,
     allowLocalRepair: !!serviceAllowLocalRepair,
-    allowPreload: !!serviceAllowPreload,
-    allowSingleDeploy: !! serviceAllowSingleDeploy,
-    allowCPU: !!serviceAllowCPU,
-    gpuMemory,
+    preload: !!serviceAllowPreload,
+    image,
+    group,
+    share: !!share,
     workflow: workflow,
     params: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Input")).map(e => parseInput(e)),
     outputs: Object.values(workflow).filter(e => e["class_type"].startsWith("CMaster_Output")).map(e => parseOutput(e))

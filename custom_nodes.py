@@ -30,10 +30,10 @@ class ServiceConfigNode:
             "optional": {
                 "description": ("STRING", {"multiline": True, "default": ""}),
                 "allowLocalRepair": ("BOOLEAN", {"default": False, "label_on": "属于局部修复工作流"}),
-                "allowPreload": ("BOOLEAN", {"default": False, "label_on": "预先加载"}),
-                "allowSingleDeploy": ("BOOLEAN", {"default": False, "label_on": "单独部署"}),
-                "cpu": ("BOOLEAN", {"default": False, "label_on": "CPU部署"}),
-                "gpu_memory": ("INT", {"default": 8}),
+                "preload": ("BOOLEAN", {"default": False, "label_on": "预先加载"}),
+                "image": ("STRING", {"multiline": False, "default": "image-9d2c19ff8c"}),
+                "group": ("STRING", {"multiline": False, "default": "A"}),
+                "share": ("BOOLEAN", {"default": False, "label_on": "共享机器"}),
             }
         }
 
@@ -42,7 +42,7 @@ class ServiceConfigNode:
     CATEGORY = "comfyui-master"
     FUNCTION = "output_func"
 
-    def output_func(self, name, description = "", allowLocalRepair = False, allowPreload = False, allowSingleDeploy = False, cpu=False, gpu_memory=3):
+    def output_func(self, name, description = "", allowLocalRepair = False, preload = False, image="", group="A", share=False):
         return ()
 
 class ImageWorkflowMetadataNode:
