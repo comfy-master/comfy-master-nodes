@@ -164,9 +164,9 @@ async function exportPrompt() {
 
 const ParameterType = {
   None: 0,
-  String: 1,
+  Boolean: 1,
   Number: 2,
-  Boolean: 3,
+  String: 3,
   Image: 4,
   Range_Number: 5,
   Enum_String: 6,
