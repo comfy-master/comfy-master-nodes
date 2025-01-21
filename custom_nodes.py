@@ -179,6 +179,26 @@ class ImageMaskTestNode:
         return img
 
 
+class SleepNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "seconds": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 100.0, "step": 0.01}),
+                "image": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+
+    CATEGORY = "comfyui-master/调试"
+    FUNCTION = "sleep"
+
+    def sleep(self, seconds, image):
+        import time
+        time.sleep(seconds)
+        return (image,)
+
 
 class InputCheckpointNode:
     @classmethod
@@ -536,7 +556,7 @@ class InputIntNode:
         return {
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputInt"}),
-                "number": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
+                "number": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
                 "export": ("BOOLEAN", {"default": True}),
             },
             "optional": {
@@ -562,10 +582,10 @@ class InputRangeIntNode:
         return {
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputRangeInt"}),
-                "number": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
+                "number": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
                 "export": ("BOOLEAN", {"default": True}),
-                "min": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
-                "max": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "step": 1}),
+                "min": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
+                "max": ("INT", {"default": 0, "min": 0, "max": 0xffffff, "step": 1}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
@@ -597,7 +617,7 @@ class InputFloatNode:
         return {
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputFloat"}),
-                "number": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
+                "number": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffff, "step": 0.01}),
                 "export": ("BOOLEAN", {"default": True}),
             },
             "optional": {
@@ -624,10 +644,10 @@ class InputRangeFloatNode:
         return {
             "required": {
                 "var_name": ("STRING", {"multiline": False, "default": "InputRangeFloat"}),
-                "number": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
+                "number": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffff, "step": 0.01}),
                 "export": ("BOOLEAN", {"default": True}),
-                "min": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
-                "max": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffffffffff, "step": 0.01}),
+                "min": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffff, "step": 0.01}),
+                "max": ("FLOAT", {"default": 0, "min": 0, "max": 0xffffff, "step": 0.01}),
             },
             "optional": {
                 "description": ("STRING", {"multiline": False, "default": ""}),
