@@ -748,6 +748,7 @@ class OutputImageNode:
                     "subfolder": subfolder,
                     "type": self.type
                 })
+                counter += 1
 
             return {"ui": {"images": results}}
         except Exception as e:
