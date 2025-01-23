@@ -738,10 +738,12 @@ class OutputImageNode:
                 array = 255.0 * tensor.cpu().numpy()
                 image = Image.fromarray(np.clip(array, 0, 255).astype(np.uint8))
 
-                server = PromptServer.instance
-                server.send_sync(100002, encode_image(var_prefix_name + var_name, image), server.client_id)
                 filename_with_batch_num = filename.replace("%batch_num%", str(i))
-                file = f"{filename_with_batch_num}_{counter:05}_.png"
+                file = f"{filename_with_batch_num}_{counter:06}_{str(i)}.png"
+
+                server = PromptServer.instance
+                server.send_sync(100002, encode_image(file, image), server.client_id)
+
                 image.save(os.path.join(full_output_folder, file), pnginfo=None, compress_level=1)
                 results.append({
                     "filename": file,
@@ -791,12 +793,12 @@ class OutputAudioNode:
 
         for (batch_number, waveform) in enumerate(audio["waveform"].cpu()):
             filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            file = f"{filename_with_batch_num}_{counter:05}_.wav"
+            file = f"{filename_with_batch_num}_{counter:06}_{str(batch_number)}.wav"
 
             buff = BytesIO()
             torchaudio.save(buff, waveform, audio["sample_rate"], format="WAV")
             server = PromptServer.instance
-            server.send_sync(100003, encode_audio(var_prefix_name + var_name, waveform, audio["sample_rate"]),
+            server.send_sync(100003, encode_audio(file, waveform, audio["sample_rate"]),
                              server.client_id)
 
             with open(os.path.join(full_output_folder, file), 'wb') as f:
