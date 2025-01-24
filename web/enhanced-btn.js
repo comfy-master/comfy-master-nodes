@@ -21,7 +21,7 @@ const enhancedBtn = document.createElement("button");
 enhancedBtn.className = "comfyui-button";
 enhancedBtn.innerHTML = "复制导出配置";
 enhancedBtn.onclick = async () => {
-    if (!await checkVarName()) {
+  if (!await checkVarName()) {
     return false
   }
   const resp = await exportPrompt()
@@ -63,19 +63,18 @@ async function checkVarName() {
 
     if (name === "CTool_ImageWorkflowMetadataTestNode") {
       alert("存在节点 ‘图片元数据(测试)’")
-        return false
+      return false
     }
 
-      if (name === "CTool_ImageMaskTestNode") {
+    if (name === "CTool_ImageMaskTestNode") {
       alert("存在节点 ‘遮罩数据(测试)’")
-        return false
-    }
-
-    if (!name.startsWith("CMaster_")) {
-      continue;
+      return false
     }
     if (name.startsWith("CMaster_Output")) {
       findOutput = true
+    }
+    if (!name.startsWith("CMaster_Input")) {
+      continue;
     }
 
     if (!node.widgets_values) {
