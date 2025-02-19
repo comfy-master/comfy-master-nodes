@@ -697,7 +697,16 @@ class OutputStringNode:
         server = PromptServer.instance
         server.send_sync(100001, encode_string(var_prefix_name + var_name, text), server.client_id)
 
-        return {"ui": {"text": [{"var_name": var_prefix_name + var_name, "text": text}]}}
+        return {"ui": {
+            "text": [text],
+            "output_texts": [
+                {
+                    "var_name": var_prefix_name + var_name,
+                    "text": text,
+                    "batch": 0,
+                }
+            ]
+        }}
 
 
 class OutputImageNode:
@@ -731,7 +740,7 @@ class OutputImageNode:
             var_name = var_prefix_name + var_name
             filename_prefix = self.filename_prefix + var_name
             results = []
-
+            output_results = []
             full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
                 filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
             for i, tensor in enumerate(images):
@@ -750,9 +759,19 @@ class OutputImageNode:
                     "subfolder": subfolder,
                     "type": self.type
                 })
+                output_results.append({
+                    "var_name": var_name,
+                    "batch": i,
+                    "filename": file,
+                    "subfolder": subfolder,
+                    "type": self.type
+                })
                 counter += 1
 
-            return {"ui": {"images": results}}
+            return {"ui": {
+                "images": results,
+                "output_images": output_results,
+            }}
         except Exception as e:
             print(f"Exception: {var_name}")
             raise e

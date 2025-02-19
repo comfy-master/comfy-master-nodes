@@ -27,9 +27,7 @@ NODE_CLASS_MAPPINGS = {
     "CMaster_InputCheckpoint": custom_nodes.InputCheckpointNode,
     "CMaster_InputLoraNode": custom_nodes.InputLoraNode,
     "CMaster_OutputImage": custom_nodes.OutputImageNode,
-
-
-    # "CMaster_OutputString": custom_nodes.OutputStringNode,
+    "CMaster_OutputString": custom_nodes.OutputStringNode,
     # "CMaster_OutputAudio": custom_nodes.OutputAudioNode,
 }
 
@@ -47,7 +45,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "CMaster_InputLoraNode": "Lora模型输入",
     "CMaster_InputImage": "图片输入",
     "CMaster_InputMaskImageNode": "遮罩图片输入",
-    "CMaster_InputString": "字符串输入",
+    "CMaster_InputString": "文本输入",
     "CMaster_InputEnumString": "枚举输入",
     "CMaster_InputInt": "整数输入",
     "CMaster_InputRangeInt": "范围整数输入",
@@ -55,7 +53,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "CMaster_InputFloat": "浮点数输入",
     "CMaster_InputRangeFloat": "范围浮点数输入",
     "CMaster_OutputImage": "图片输出",
-    # "CMaster_OutputString": "Output String",
+    "CMaster_OutputString": "文本输出",
     # "CMaster_OutputAudio": "Output Audio",
 }
 
